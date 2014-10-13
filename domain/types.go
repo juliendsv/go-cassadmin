@@ -5,8 +5,8 @@ var (
 )
 
 type NOSQLStore interface {
-	ListKeyspaces() ([]Keyspace, error)
-	// ListColumnFamilyResults(string) error
+	ShowKeyspaces() ([]Keyspace, error)
+	ShowColumnFamily(ks, cf string) error
 }
 
 type Columnfamily struct {
