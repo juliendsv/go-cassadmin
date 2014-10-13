@@ -6,14 +6,10 @@ var (
 
 type NOSQLStore interface {
 	ShowKeyspaces() ([]Keyspace, error)
-	ShowColumnFamily(ks, cf string) error
+	ShowColumnFamily(ks, cf string) ([]map[string]string, error)
 }
 
 type Columnfamily struct {
-	Name string
-}
-
-type CfRow struct {
 	Name string
 }
 

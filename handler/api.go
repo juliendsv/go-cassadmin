@@ -26,8 +26,17 @@ func APIKeyspaces(w http.ResponseWriter, r *http.Request) {
 
 func APIShowCf(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	_ = domain.DefaultStore.ShowColumnFamily(vars["ks"], vars["cf"])
+	rows, err := domain.DefaultStore.ShowColumnFamily(vars["ks"], vars["cf"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
+	resp, err := json.Marshal(rows)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
-	// w.Write()
+	w.Write(resp)
 }

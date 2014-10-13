@@ -59,15 +59,14 @@ func (c CassandraStore) ShowKeyspaces() ([]domain.Keyspace, error) {
 	return keyspaces, nil
 }
 
-func (c CassandraStore) ShowColumnFamily(ks, cf string) error {
+func (c CassandraStore) ShowColumnFamily(ks, cf string) ([]map[string]string, error) {
 	rows, err := c.Session.Query("SELECT * FROM  " + ks + "." + cf + ";").Iter().SliceMap()
 	if err != nil {
-		return err
+		return nil, err
 	}
-
 	map_cf := make(map[string]string)
-
-	for _, r := range rows {
+	res := make([]map[string]string, len(rows))
+	for i, r := range rows {
 		for k, result := range r {
 			// TODO manage all types, save it
 			// and maybe we should save the value as bytes[] instead of string
@@ -78,9 +77,11 @@ func (c CassandraStore) ShowColumnFamily(ks, cf string) error {
 				map_cf[k] = v
 			}
 		}
-		log.Infof("map: %v", map_cf)
+		res[i] = map_cf
 	}
-	return nil
+
+	log.Infof("res: %v", res)
+	return res, nil
 }
 
 func makeColumnfamilies(names []string) []domain.Columnfamily {
