@@ -20,12 +20,11 @@ func main() {
 	r := mux.NewRouter()
 
 	// Web
-	// r.HandleFunc("/", handler.Home)
+	// r.HandleFunc("/", handler.Ui)
 
 	// Api
 	r.HandleFunc("/api/keyspaces", handler.APIKeyspaces)
-	// r.HandleFunc("/api/keyspace/{ks}/{cf}", handler.APIShowCf)
-	// r.HandleFunc("/api/{ks}/{cf}", handler.APIShowCf)
+	r.HandleFunc("/api/keyspace/{ks}/{cf}", handler.APIShowCf)
 
 	http.Handle("/", r)
 	http.ListenAndServe(":3000", nil)

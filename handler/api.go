@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"github.com/juliendsv/go-cassadmin/domain"
 )
 
 func APIKeyspaces(w http.ResponseWriter, r *http.Request) {
-	keyspaces, err := domain.DefaultStore.ListKeyspaces()
+	keyspaces, err := domain.DefaultStore.ShowKeyspaces()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -22,9 +24,18 @@ func APIKeyspaces(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp)
 }
 
-// func APIShowCf(w http.ResponseWriter, r *http.Request) {
-// 	cfResults, err := domain.DefaultStore.ListKeyspaces()
-
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.Write(resp)
-// }
+func APIShowCf(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	rows, err := domain.DefaultStore.ShowColumnFamily(vars["ks"], vars["cf"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	resp, err := json.Marshal(rows)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(resp)
+}
