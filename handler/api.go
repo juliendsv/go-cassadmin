@@ -31,7 +31,6 @@ func APIShowCf(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	resp, err := json.Marshal(rows)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

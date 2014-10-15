@@ -20,7 +20,7 @@ func main() {
 	r := mux.NewRouter()
 
 	// Web
-	// r.HandleFunc("/", handler.Home)
+	// r.HandleFunc("/", handler.Ui)
 
 	// Api
 	r.HandleFunc("/api/keyspaces", handler.APIKeyspaces)

@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"fmt"
 	"strconv"
 
 	log "github.com/cihub/seelog"
@@ -13,6 +14,8 @@ const (
 	clusterNodes = "127.0.0.1"
 	port         = 19043
 	consistency  = gocql.Quorum
+
+	defaultLimit = 100
 )
 
 type CassandraStore struct {
@@ -34,17 +37,49 @@ func NewCassandraStore() (domain.NOSQLStore, error) {
 	}, nil
 }
 
+func (c CassandraStore) CreateKeyspace(keyspace_name string) error {
+	err := c.exec(fmt.Sprintf(`CREATE KEYSPACE %s
+	WITH replication = {
+		'class' : 'SimpleStrategy',
+		'replication_factor' : %d
+	}`, keyspace_name, 1))
+	return err
+}
+
+func (c CassandraStore) DropKeyspace(keyspace_name string) error {
+	err := c.exec(fmt.Sprintf(`DROP KEYSPACE %s`, keyspace_name))
+	return err
+}
+
+func (c CassandraStore) exec(query string) error {
+	if err := c.Session.Query(query).Consistency(consistency).Exec(); err != nil {
+		return fmt.Errorf("error executing query %s: %v", query, err)
+	}
+	return nil
+}
+
 func (c CassandraStore) ShowKeyspaces() ([]domain.Keyspace, error) {
-	rows, err := c.Session.Query("SELECT keyspace_name, columnfamily_name FROM system.schema_columnfamilies;").Iter().SliceMap()
-	if err != nil {
-		return nil, err
+	ks, err_ks := c.Session.Query("SELECT keyspace_name FROM system.schema_keyspaces;").Iter().SliceMap()
+	if err_ks != nil {
+		return nil, err_ks
+	}
+	map_ks := make(map[string][]string, 0)
+	for _, r := range ks {
+		if r["keyspace_name"] != "system" && r["keyspace_name"] != "system_traces" {
+			map_ks[r["keyspace_name"].(string)] = []string{}
+		}
 	}
 
-	map_ks := make(map[string][]string, 0)
-	// log.Infof("result select: %v", rows)
-	for _, r := range rows {
+	// TODO split this in two function kss ans cfs
+
+	cfs, err_cf := c.Session.Query("SELECT keyspace_name, columnfamily_name FROM system.schema_columnfamilies;").Iter().SliceMap()
+	if err_cf != nil {
+		return nil, err_cf
+	}
+	for _, r := range cfs {
 		if r["keyspace_name"] != "system" && r["keyspace_name"] != "system_traces" {
 			map_ks[r["keyspace_name"].(string)] = append(map_ks[r["keyspace_name"].(string)], r["columnfamily_name"].(string))
+
 		}
 	}
 
